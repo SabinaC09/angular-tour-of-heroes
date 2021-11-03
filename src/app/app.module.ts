@@ -12,6 +12,8 @@ import { HeroDetailComponent } from './hero-detail/hero-detail.component';
 import { MessagesComponent } from './messages/messages.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { HeroSearchComponent } from './hero-search/hero-search.component';
+import { StrengthPipe } from './strength/strength.pipe';
+import { HeroComponent } from './hero/hero.component';
 
 @NgModule({
   declarations: [
@@ -20,7 +22,9 @@ import { HeroSearchComponent } from './hero-search/hero-search.component';
     HeroDetailComponent,
     MessagesComponent,
     DashboardComponent,
-    HeroSearchComponent
+    HeroSearchComponent,
+    StrengthPipe,
+    HeroComponent
   ],
   imports: [
     BrowserModule,

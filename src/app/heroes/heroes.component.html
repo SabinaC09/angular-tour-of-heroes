@@ -3,11 +3,7 @@
 <ul class=heroes
 data-testid="heroes-list">
     <li *ngFor="let hero of heroes">
-        <a routerLink="/detail/{{hero.id}}">
-        <span class="badge">{{hero.id}}</span>{{ hero.name}}
-        </a>
-        <button class="delete" title="delete hero"
-    (click)="delete(hero)">x</button>
+        <app-hero [hero]="hero" (delete)="delete(hero)"></app-hero>
     </li>
 </ul>
 

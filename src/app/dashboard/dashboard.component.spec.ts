@@ -7,6 +7,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { DashboardComponent } from './dashboard.component';
 import { DebugElement } from '@angular/core';
 import { By } from '@angular/platform-browser';
+import { StrengthPipe } from '../strength/strength.pipe';
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent;
@@ -23,7 +24,7 @@ describe('DashboardComponent', () => {
     routerSpy = jasmine.createSpyObj('Router', ['navigateByUrl']);
 
     await TestBed.configureTestingModule({
-      declarations: [DashboardComponent, HeroSearchComponent],
+      declarations: [DashboardComponent, HeroSearchComponent, StrengthPipe],
       imports: [RouterTestingModule.withRoutes([])],
       providers: [
         { provide: HeroService, useValue: heroServiceSpy },

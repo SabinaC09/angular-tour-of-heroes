@@ -9,7 +9,7 @@ describe('HeroDetailComponent', () => {
   let component: HeroDetailComponent;
   let fixture: ComponentFixture<HeroDetailComponent>;
   let heroServiceSpy;
-  const hero: Hero = { id: 1, name: 'HeroName' };
+  const hero: Hero = { id: 1, name: 'HeroName', strength: 10 };
 
   beforeEach(async () => {
 

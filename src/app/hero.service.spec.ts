@@ -5,9 +5,9 @@ import { MessageService } from './message.service';
 import { Hero } from './hero';
 
 const mockData = [
-  { id: 1, name: 'TestHero1' },
-  { id: 2, name: 'TestHero2' },
-  { id: 3, name: 'TestHero3' },
+  { id: 1, name: 'TestHero1', strength: 13 },
+  { id: 2, name: 'TestHero2', strength: 20 },
+  { id: 3, name: 'TestHero3', strength: 30 },
 ] as Hero[];
 
 describe('HeroService', () => {
@@ -16,8 +16,10 @@ describe('HeroService', () => {
   let mockHeroes: any;
   let mockHero: any; //infer parameter types on usage
   let mockId: number;
+  let messageServiceSpy;
 
   beforeEach(() => {
+    messageServiceSpy = jasmine.createSpyObj(['add']);
     mockHeroes = [...mockData];
     mockHero = mockHeroes[0];
     mockId = mockHero.id;
@@ -25,20 +27,13 @@ describe('HeroService', () => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
       providers: [HeroService, MessageService]
+      //{ provide: MessageService, useValue: messageServiceSpy }]
     });
 
     heroService = TestBed.inject(HeroService);
     httpTestingController = TestBed.inject(HttpTestingController);
   });
 
-  /*beforeEach(inject([HeroService], (s: any) => {
-    heroService = s;
-  }));*/
-
-  /*beforeEach(() => {
-    
-    //heroService=TestBed.get(heroService);
-  });*/
 
   const apiUrl = (id: number) => {
     return `${heroService.heroesUrl}/${mockId}`;
@@ -63,9 +58,9 @@ describe('HeroService', () => {
       );
 
       const req = httpTestingController.expectOne(heroService.heroesUrl);
+      expect(req.request.method).toEqual('GET');
       req.flush(mockHeroes);
 
-      expect(req.request.method).toEqual('GET');
       expect(heroService.log).toHaveBeenCalledTimes(1);
       expect(heroService.messageService.messages[0]).toEqual('HeroService: fetched heroes');
     });
@@ -86,7 +81,7 @@ describe('HeroService', () => {
       req.flush(mockHero);
 
       expect(heroService.log).toHaveBeenCalledTimes(1);
-      //expect(heroService.messageService.message[0]).toEqual(`HeroService: fetched hero id=${mockHero.id}`);
+      //expect(heroService.messageService.message[0]).toContain(`fetched hero id=${mockHero.id}`);
     });
   });
 
