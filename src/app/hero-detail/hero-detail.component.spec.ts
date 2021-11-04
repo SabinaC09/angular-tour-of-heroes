@@ -1,31 +1,44 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HeroDetailComponent } from './hero-detail.component';
-import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { By } from '@angular/platform-browser';
 import { Hero } from '../hero';
+import { ActivatedRoute } from '@angular/router';
+import { HeroService } from '../hero.service';
+import { of } from 'rxjs';
+import { Location } from '@angular/common'
+import { FormsModule } from '@angular/forms';
 
 describe('HeroDetailComponent', () => {
   let component: HeroDetailComponent;
   let fixture: ComponentFixture<HeroDetailComponent>;
-  let heroServiceSpy;
-  const hero: Hero = { id: 1, name: 'HeroName', strength: 10 };
+  let heroServiceSpy, locationSpy;
+  let mockActivatedRoute;
+  const testHero: Hero = { id: 1, name: 'HeroName', strength: 10 };
 
   beforeEach(async () => {
 
-    heroServiceSpy = jasmine.createSpyObj('HeroService', ['getHeroes', 'addHero']);
+    heroServiceSpy = jasmine.createSpyObj(['getHero', 'save']);
+    locationSpy = jasmine.createSpyObj(['back']);
+    mockActivatedRoute = {
+      snapshot: { paramMap: { get: () => { return '1'; } } }
+    }
 
-    //getHeroesSpy = heroServiceSpy.getHeroes.and.returnValue(of(HEROES));
+    heroServiceSpy.getHero.and.returnValue(of(testHero));
 
     await TestBed.configureTestingModule({
       declarations: [HeroDetailComponent],
-      imports: [RouterTestingModule.withRoutes([]), HttpClientTestingModule]
+      imports: [FormsModule],
+      providers: [
+        { provide: ActivatedRoute, useValue: mockActivatedRoute },
+        { provide: HeroService, useValue: heroServiceSpy },
+        { provide: Location, useValue: locationSpy }
+      ]
     })
       .compileComponents();
 
     fixture = TestBed.createComponent(HeroDetailComponent);
     component = fixture.componentInstance;
-    component.hero = hero;
     fixture.detectChanges();
 
   });
@@ -36,40 +49,26 @@ describe('HeroDetailComponent', () => {
   });
 
   it('should have hero input', () => {
-    expect(component.hero).toEqual(hero);
+    expect(component.hero).toEqual(testHero);
+  });
+
+  it('should render hero name in h2 tag', () => {
+    expect(fixture.nativeElement.querySelector('h2').textContent).toContain('HERONAME');
   });
 
   it('should display hero input', () => {
 
     const id = fixture.debugElement.query(By.css('[data-testid="hero-id"]')).nativeElement;
-    id.value = hero.id;
+    id.value = testHero.id;
     const name = fixture.debugElement.query(By.css('input')).nativeElement;
-    name.value = hero.name;
-    name.dispatchEvent(new Event(hero.name)); 
+    name.value = testHero.name;
+    name.dispatchEvent(new Event(testHero.name));
 
-    expect(name.value).toEqual(hero.name);
-    expect(id.value).toEqual(hero.id);
+    expect(name.value).toEqual(testHero.name);
+    expect(id.value).toEqual(testHero.id);
   });
 
-  /*it('should convert hero name to Title Case', () => {
-    // get the name's input and display elements from the DOM
-    const hostElement: HTMLElement = fixture.nativeElement;
-    const nameInput: HTMLInputElement = hostElement.querySelector('input')!;
-    const nameDisplay: HTMLElement = hostElement.querySelector('span')!;
-  
-    // simulate user entering a new name into the input box
-    nameInput.value = 'quick BROWN  fOx';
-  
-    // Dispatch a DOM event so that Angular learns of input value change.
-    // In older browsers, such as IE, you might need a CustomEvent instead. See
-    // https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/CustomEvent#Polyfill
-    nameInput.dispatchEvent(new Event('input'));
-  
-    // Tell Angular to update the display binding through the title pipe
-    fixture.detectChanges();
-  
-    expect(nameDisplay.textContent).toBe('Quick Brown  Fox');
-  });*/
+
 
 
 });

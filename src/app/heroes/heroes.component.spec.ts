@@ -8,7 +8,7 @@ import { HEROES } from '../mock-heroes';
 import { of } from 'rxjs';
 import { TestScheduler } from 'rxjs/testing';
 import { Hero } from '../hero';
-import { Component, Input, NO_ERRORS_SCHEMA } from '@angular/core';
+import { Component, Directive, Input, NO_ERRORS_SCHEMA } from '@angular/core';
 import { HeroComponent } from '../hero/hero.component';
 
 
@@ -71,7 +71,7 @@ describe('HeroesComponent (Shallow)', () => {
     expect(fixture.debugElement.queryAll(By.css('li')).length).toBe(HEROES.length);
   })
 
-  it('should add hero', () => {
+  it('should add hero using button', () => {
 
     spyOn(component, 'add').and.callThrough();
     const newHero = 'TestHero';
@@ -90,15 +90,6 @@ describe('HeroesComponent (Shallow)', () => {
 
   });
 
-  // it('should delete a hero', () => {
-  //   const deleteButton = fixture.debugElement.query(By.css('.delete'));
-  //   const deleteHero = component.heroes[0];
-  //   deleteButton.triggerEventHandler('click', deleteHero);
-  //   fixture.detectChanges();
-
-  //   const heroesList = fixture.debugElement.queryAll(By.css('li'));
-  //   expect(heroesList.length).toBeLessThan(heroesNo);
-  // });
 
   it('should call delete hero with criteria', () => {
     component.delete(HEROES[1]);
@@ -152,21 +143,36 @@ describe('HeroesComponent (Shallow)', () => {
 
 });
 
+@Directive({
+  selector: '[routerLink]',
+  host: { '(click)': 'onClick()' } //listen to a host event: if click was fired, called onClick method
+})
+export class RouterLinkDirectiveStub {
+  @Input('routerLink') linkParams: any; // primeste: routerLink="/detail/{{hero.id}}
+  navigatedTo: any = null;
+
+  onClick() {
+    this.navigatedTo = this.linkParams;
+  }
+}
+
 describe('HeroesComponent (Deep)', () => {
   let component: HeroesComponent;
   let fixture: ComponentFixture<HeroesComponent>;
   let heroServiceSpy: any;
+  const testHero: Hero = { id: 21, name: 'TestHero', strength: 30 };
 
   beforeEach(async () => {
 
     heroServiceSpy = jasmine.createSpyObj('HeroService', ['getHeroes', 'addHero', 'deleteHero']);
     heroServiceSpy.getHeroes.and.returnValue(of(HEROES));
+    heroServiceSpy.addHero.and.returnValue(of(testHero));
 
     await TestBed.configureTestingModule({
-      declarations: [HeroesComponent, HeroComponent],
+      declarations: [HeroesComponent, HeroComponent, RouterLinkDirectiveStub],
       providers: [
         { provide: HeroService, useValue: heroServiceSpy }],
-      schemas: [NO_ERRORS_SCHEMA]
+      //schemas: [NO_ERRORS_SCHEMA]
     })
       .compileComponents();
 
@@ -180,7 +186,44 @@ describe('HeroesComponent (Deep)', () => {
     expect(heroCompDebEls.length).toEqual(HEROES.length);
     for (let i = 0; i < heroCompDebEls.length; i++)
       expect(heroCompDebEls[i].componentInstance.hero).toEqual(HEROES[i]);
-  })
+  });
+
+  //Testig iteractions between parent and child component
+  //trigger events on elements / trigger events from children / raising events on child directives
+  it('should call heroService.deleteHero method when the delete button is clicked', () => {
+    spyOn(fixture.componentInstance, 'delete');
+    const heroCompDebEls = fixture.debugElement.queryAll(By.directive(HeroComponent));
+    //const deleteBtn = heroCompDebEls[0].query(By.css('.delete'));
+    //deleteBtn.triggerEventHandler('click', { stopPropagation: () => { } });
+
+    //(<HeroComponent>heroCompDebEls[0].componentInstance).delete.emit(undefined);
+    heroCompDebEls[0].triggerEventHandler('delete', null);
+
+    expect(fixture.componentInstance.delete).toHaveBeenCalledOnceWith(HEROES[0]);
+  });
+
+  it('should add a new hero to the hero list when the button is clicked', () => {
+    const input = fixture.debugElement.query(By.css('input')).nativeElement;
+    const addButton = fixture.debugElement.query(By.css('[data-testid="add-button"]'));
+
+    input.value = testHero.name;
+    addButton.triggerEventHandler('click', null);
+    fixture.detectChanges();
+
+    const heroText = fixture.debugElement.query(By.css('ul')).nativeElement.textContent;
+    expect(heroText).toContain(testHero.name);
+  });
+
+  //Testing routing components
+  it('should have the correct route for the first hero', () => {
+    const heroComponents = fixture.debugElement.queryAll(By.directive(HeroComponent));
+    let routerLink = heroComponents[0].query(By.directive(RouterLinkDirectiveStub))
+      .injector.get(RouterLinkDirectiveStub);//return instance of the router link stub for this specific heroComp[0]
+
+    heroComponents[0].query(By.css('a')).triggerEventHandler('click', null);
+
+    expect(routerLink.navigatedTo).toBe(`/detail/${HEROES[0].id}`);
+  });
 
 
 });
