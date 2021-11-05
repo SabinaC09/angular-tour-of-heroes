@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, flush, TestBed, tick, waitForAsync } from '@angular/core/testing';
 import { HeroDetailComponent } from './hero-detail.component';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { By } from '@angular/platform-browser';
@@ -12,19 +12,21 @@ import { FormsModule } from '@angular/forms';
 describe('HeroDetailComponent', () => {
   let component: HeroDetailComponent;
   let fixture: ComponentFixture<HeroDetailComponent>;
-  let heroServiceSpy, locationSpy;
+  let heroServiceSpy: any;
+  let locationSpy;
   let mockActivatedRoute;
   const testHero: Hero = { id: 1, name: 'HeroName', strength: 10 };
 
   beforeEach(async () => {
 
-    heroServiceSpy = jasmine.createSpyObj(['getHero', 'save']);
+    heroServiceSpy = jasmine.createSpyObj(['getHero', 'updateHero']);
     locationSpy = jasmine.createSpyObj(['back']);
     mockActivatedRoute = {
       snapshot: { paramMap: { get: () => { return '1'; } } }
     }
 
     heroServiceSpy.getHero.and.returnValue(of(testHero));
+    heroServiceSpy.updateHero.and.returnValue(of({}));
 
     await TestBed.configureTestingModule({
       declarations: [HeroDetailComponent],
@@ -68,7 +70,32 @@ describe('HeroDetailComponent', () => {
     expect(id.value).toEqual(testHero.id);
   });
 
+  //Asynch testing
+  /* it('should call updateHero when save is called', (done) => { // pt testele asincrone se foloseste done
+     component.save();
+     setTimeout(()=>{
+       expect(heroServiceSpy.updateHero).toHaveBeenCalled();
+       done(); // altfel nu asteapta pana se termimn testul, ci trece la urmat
+     }, 300);
+   })*/
 
+  //Fake asynch helper function (ca sa nu asteptam x secunde after each test if we have more than 1)
+  it('should call updateHero when save is called', fakeAsync(() => { //makes the test synchronous
+    component.save();
+    //tick(250);
+    flush();//tells fakeasynch to work with zone.js and fast forward time to execute waiting tasks
 
+    expect(heroServiceSpy.updateHero).toHaveBeenCalled();
+  }));
+
+  //waitforasynch helper method ( used for scenarios where u use promises)
+  // it('should call updateHero when save is called', waitForAsync(() => {
+  //   component.save();
+
+  //   //wait for any promises to be resolved before executing
+  //   fixture.whenStable().then(() => {
+  //     expect(heroServiceSpy.updateHero).toHaveBeenCalled();
+  //   })
+  // }));
 
 });
